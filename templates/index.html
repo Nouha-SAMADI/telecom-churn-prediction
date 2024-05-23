@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telecom Data Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .chart-container {
+            margin-bottom: 40px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        nav {
+            background-color: #222831;
+            color: #fff;
+            padding: 10px 0;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        nav ul li {
+            display: inline;
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.9em;
+            color: #222831;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/data">Data</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1><strong>Analyzing Customer Churn in Telecom Industry</strong></h1>
+        <div class="row">
+            <div class="col-md-6 chart-container">
+                <canvas id="stateChart"></canvas>
+            </div>
+            <div class="col-md-6 chart-container">
+                <canvas id="areaCodeChart"></canvas>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6 chart-container">
+                <canvas id="churnChart"></canvas>
+            </div>
+            <div class="col-md-6 chart-container">
+                <canvas id="totalDayMinutesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const states = data.map(item => item.state);
+                    const areaCodes = data.map(item => item.area_code);
+                    const churns = data.map(item => item.label_churn);
+                    const totalDayMinutes = data.map(item => item.total_day_minutes);
+
+                    const stateCounts = {};
+                    const areaCodeCounts = {};
+                    const churnCounts = { churn: 0, noChurn: 0 };
+                    const churnedMinutes = [];
+                    const nonChurnedMinutes = [];
+
+                    states.forEach(state => {
+                        stateCounts[state] = (stateCounts[state] || 0) + 1;
+                    });
+
+                    areaCodes.forEach(areaCode => {
+                        areaCodeCounts[areaCode] = (areaCodeCounts[areaCode] || 0) + 1;
+                    });
+
+                    churns.forEach((churn, index) => {
+                        if (churn) {
+                            churnCounts.churn += 1;
+                            churnedMinutes.push(totalDayMinutes[index]);
+                        } else {
+                            churnCounts.noChurn += 1;
+                            nonChurnedMinutes.push(totalDayMinutes[index]);
+                        }
+                    });
+
+                    const stateLabels = Object.keys(stateCounts);
+                    const stateData = Object.values(stateCounts);
+
+                    const areaCodeLabels = Object.keys(areaCodeCounts);
+                    const areaCodeData = Object.values(areaCodeCounts);
+
+                    const churnLabels = ["Churn", "Stayed"];
+                    const churnData = [churnCounts.churn, churnCounts.noChurn];
+
+                    new Chart(document.getElementById('stateChart').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: stateLabels,
+                            datasets: [{
+                                label: 'Number of Users by State',
+                                data: stateData,
+                                backgroundColor: '#f96d00',
+                                borderColor: '#f96d00',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Users by State'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('areaCodeChart').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: areaCodeLabels,
+                            datasets: [{
+                                label: 'Number of Users by Area Code',
+                                data: areaCodeData,
+                                backgroundColor: '#455061',
+                                borderColor: '#455061',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Users by Area Code'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('churnChart').getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: churnLabels,
+                            datasets: [{
+                                label: 'Churn vs Stayed',
+                                data: churnData,
+                                backgroundColor: ['#eda934', '#2c465e'],
+                                borderColor: ['#e66b19', '#2c465e'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Churn vs Stayed'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('totalDayMinutesChart').getContext('2d'), {
+                        type: 'scatter',
+                        data: {
+                            datasets: [
+                                {
+                                    label: 'Churned Customers',
+                                    data: churnedMinutes.map((value, index) => ({ x: index, y: value })),
+                                    backgroundColor: '#eda934',
+                                    borderColor: '#eda934',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Non-Churned Customers',
+                                    data: nonChurnedMinutes.map((value, index) => ({ x: index, y: value })),
+                                    backgroundColor: '#2c465e',
+                                    borderColor: '#2c465e',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    beginAtZero: true
+                                },
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Total Day Minutes Distribution by Churn'
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
+</body>
+
+</html>
