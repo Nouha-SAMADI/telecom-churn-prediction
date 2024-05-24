@@ -86,7 +86,7 @@
                 .then(data => {
                     const states = data.map(item => item.state);
                     const areaCodes = data.map(item => item.area_code);
-                    const churns = data.map(item => item.label_churn);
+                    const churns = data.map(item => item.predicted_label);
                     const totalDayMinutes = data.map(item => item.total_day_minutes);
 
                     const stateCounts = {};

@@ -63,14 +63,6 @@ services:
       - mynetwork
 
 
-  flask-app:
-    build: .
-    ports:
-      - "5000:5000"
-    depends_on:
-      - kafka
-    networks:
-      - mynetwork
 
 
 networks:

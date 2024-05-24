@@ -15,10 +15,10 @@ def index():
 def get_data():
     # Query data from Cassandra
     rows = session.execute(
-        "SELECT state, area_code, label_churn, total_day_minutes FROM churn_predictions")
+        "SELECT state, area_code, predicted_label, total_day_minutes FROM churn_predictions")
 
     # Convert rows to a list of dictionaries
-    data = [{"state": row.state, "area_code": row.area_code, "label_churn": row.label_churn, "total_day_minutes": row.total_day_minutes} for row in rows]
+    data = [{"state": row.state, "area_code": row.area_code, "predicted_label": row.predicted_label, "total_day_minutes": row.total_day_minutes} for row in rows]
 
     return jsonify(data)
 
